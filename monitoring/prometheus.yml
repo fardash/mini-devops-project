@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']
+
+  - job_name: 'flask_app'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['hello_app:5000']
+
+  - job_name: 'nginx_exporter'
+    static_configs:
+      - targets: ['nginx_exporter:9113']

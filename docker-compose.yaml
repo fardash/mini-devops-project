@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  app:
+    build: ./app
+    container_name: hello_app
+    expose:
+      - "5000"
+
+  nginx:
+    build: ./nginx
+    container_name: nginx_proxy
+    ports:
+      - "443:443"
+      - "8080:8080" 
+    depends_on:
+      - app
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    command:
+      - '--nginx.scrape-uri=http://nginx_proxy:8080/stub_status'
+    ports:
+      - "9113:9113"
+    depends_on:
+      - nginx
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - nginx_exporter
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
