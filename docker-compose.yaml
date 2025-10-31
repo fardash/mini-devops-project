@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 
 services:
   app:
@@ -6,13 +6,35 @@ services:
     container_name: hello_app
     expose:
       - "5000"
+    depends_on:
+      - db
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    env_file: .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nginx:
     build: ./nginx
     container_name: nginx_proxy
     ports:
       - "443:443"
-      - "8080:8080" 
+      - "8080:8080"
     depends_on:
       - app
 
@@ -44,3 +66,6 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+
+volumes:
+  mysql_data:
